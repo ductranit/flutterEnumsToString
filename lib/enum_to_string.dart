@@ -34,15 +34,19 @@ class EnumToString {
   /// it will capitalize each word. So TestEnum.valueOne will become "Value One"
   /// instead of "Value one"
   static String convertToString(dynamic enumItem,
-      {bool camelCase = false, bool capitalizeWords = false}) {
+      {bool camelCase = false,
+      bool capitalizeWords = false,
+      bool checkCustomMapping = false}) {
     assert(enumItem != null);
     assert(_isEnumItem(enumItem),
         '$enumItem of type ${enumItem.runtimeType.toString()} is not an enum item');
 
     // First check for custom mapping
-    final customMapping = _getCustomMapping(enumItem);
-    if (customMapping != null) {
-      return customMapping;
+    if (checkCustomMapping) {
+      final customMapping = _getCustomMapping(enumItem);
+      if (customMapping != null) {
+        return customMapping;
+      }
     }
 
     // Fall back to original behavior
@@ -73,16 +77,16 @@ class EnumToString {
   /// Example final result = EnumToString.fromString(TestEnum.values, "valueOne")
   /// result == TestEnum.valueOne //true
   ///
-  static T? fromString<T>(List<T> enumValues, String value,
+  static T? fromString<T>(List<T?> enumValues, String value,
       {bool camelCase = false}) {
-    try {
-      return enumValues.singleWhere((enumItem) =>
-          EnumToString.convertToString(enumItem, camelCase: camelCase)
-              .toLowerCase() ==
-          value.toLowerCase());
-    } on StateError catch (_) {
-      return null;
-    }
+    final matchList = enumValues
+        .where((enumItem) =>
+            EnumToString.convertToString(enumItem, camelCase: camelCase)
+                .toLowerCase() ==
+            value.toLowerCase())
+        .toList();
+
+    return matchList.length == 1 ? matchList.single : null;
   }
 
   /// Get the index of the enum value
